@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Uhonish Translator</title>
+<style>
+  html, body { margin: 0; padding: 0; overflow-x: hidden; max-width: 100%; }
+  *, *::before, *::after { box-sizing: border-box; }
+</style>
+</head>
+<body>
+
+<!-- =========================================================
+     STAGE 1: the "translator" — deliberately plain/raw looking.
+     No fancy CSS on purpose. This is the surprise's disguise.
+     ========================================================= -->
+<div id="stage1" style="padding: 14px; max-width: 480px; margin: 0 auto;">
+  <h2>Uhonish &lt;-&gt; English Translator</h2>
+  <p>Our goated little language we've been building out of our typos. Try it out there below.</p>
+
+  <p>
+    <label><input type="radio" name="direction" value="toUhonish" checked> English &rarr; Uhonish</label><br>
+    <label><input type="radio" name="direction" value="toEnglish"> Uhonish &rarr; English</label>
+  </p>
+
+  <p>
+    <textarea id="inputBox" rows="4" style="width:100%; max-width:100%;">type something here</textarea>
+  </p>
+
+  <p>
+    <button id="translateBtn" style="padding:8px 14px;">Translate</button>
+  </p>
+
+  <p>
+    Result:<br>
+    <textarea id="outputBox" rows="4" style="width:100%; max-width:100%;" readonly></textarea>
+  </p>
+
+  <hr>
+  <p><small></small></p>
+</div>
+
+
+<!-- =========================================================
+     STAGE 2: the real reason this page exists.
+     Hidden until she translates something once.
+     ========================================================= -->
+<div id="stage2" style="display:none;">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Patrick+Hand&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    #stage2 {
+      --purple-deep: #4b2a70;
+      --purple: #7c4fb0;
+      --purple-light: #b98ee0;
+      --yellow: #f4b400;
+      --marigold: #f0972c;
+      --marigold-dark: #c9781f;
+      --cream: #fff8ec;
+
+      font-family: 'Quicksand', sans-serif;
+      min-height: 100vh;
+      box-sizing: border-box;
+      padding: 40px 20px 70px;
+      background: radial-gradient(circle at 20% 10%, #9b6cc7 0%, var(--purple-deep) 55%, #3a1f5c 100%);
+      color: #3a1f5c;
+      position: relative;
+      overflow-x: hidden;
+      width: 100%;
+    }
+
+    #stage2 * { box-sizing: border-box; }
+
+    /* ---------- floating marigolds scattered around ---------- */
+    .marigold {
+      position: absolute;
+      width: 70px;
+      height: 70px;
+      opacity: 0.9;
+      pointer-events: none;
+      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.25));
+    }
+
+    /* ---------- title ---------- */
+    .title-wrap {
+      text-align: center;
+      margin-bottom: 10px;
+      position: relative;
+      z-index: 2;
+    }
+    .title-wrap h1 {
+      font-family: 'Dancing Script', cursive;
+      font-size: clamp(48px, 9vw, 92px);
+      color: var(--yellow);
+      text-shadow: 0 3px 12px rgba(0,0,0,0.35);
+      margin: 0;
+      letter-spacing: 1px;
+    }
+    .title-wrap p.sub {
+      color: #f4e6ff;
+      font-weight: 500;
+      margin-top: 4px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      font-size: 13px;
+      opacity: 0.85;
+    }
+
+    /* ---------- the letter ---------- */
+    .letter-frame {
+      max-width: 640px;
+      margin: 50px auto 45px;
+      position: relative;
+      z-index: 2;
+    }
+    .letter {
+      background: var(--cream);
+      border-radius: 4px;
+      padding: 46px 42px;
+      transform: rotate(-2.2deg);
+      box-shadow:
+        0 18px 40px rgba(0,0,0,0.35),
+        0 2px 0 rgba(0,0,0,0.05) inset;
+      position: relative;
+      border: 1px solid rgba(124,79,176,0.25);
+    }
+    .letter::before {
+      content: "";
+      position: absolute;
+      top: -14px;
+      left: 50%;
+      transform: translateX(-50%) rotate(3deg);
+      width: 90px;
+      height: 34px;
+      background: var(--marigold);
+      opacity: 0.85;
+      border-radius: 2px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.25);
+    }
+    .letter-text {
+      font-family: 'Patrick Hand', sans-serif;
+      font-size: 21px;
+      line-height: 34px;
+      color: #4a2e63;
+      white-space: pre-wrap;
+      margin: 0;
+      background-image: repeating-linear-gradient(
+        to bottom,
+        transparent 0,
+        transparent 31px,
+        rgba(124,79,176,0.3) 32px,
+        transparent 33px,
+        transparent 34px
+      );
+      background-size: 100% 34px;
+    }
+
+    .corner-flower {
+      position: absolute;
+      width: 54px;
+      height: 54px;
+    }
+    .corner-flower.tl { top: -22px; left: -22px; transform: rotate(-15deg); }
+    .corner-flower.br { bottom: -22px; right: -22px; transform: rotate(20deg); }
+
+    /* ---------- buttons ---------- */
+    .choice-wrap {
+      display: flex;
+      justify-content: center;
+      gap: 26px;
+      margin-top: 10px;
+      position: relative;
+      z-index: 2;
+      flex-wrap: wrap;
+    }
+    .choice-btn {
+      font-family: 'Patrick Hand', sans-serif;
+      font-weight: 400;
+      font-size: 21px;
+      padding: 14px 38px;
+      border-radius: 40px;
+      border: none;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      box-shadow: 0 8px 18px rgba(0,0,0,0.3);
+    }
+    .choice-btn:hover { transform: translateY(-3px) scale(1.03); }
+    #yesBtn {
+      background: linear-gradient(135deg, var(--yellow), var(--marigold));
+      color: #4a2e00;
+    }
+    #noBtn {
+      background: linear-gradient(135deg, #d8c3ef, var(--purple-light));
+      color: #3a1f5c;
+    }
+
+    /* ---------- modal ---------- */
+    #modalOverlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(30,10,50,0.55);
+      backdrop-filter: blur(2px);
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+      padding: 20px;
+    }
+    #modalBox {
+      background: var(--cream);
+      max-width: 420px;
+      width: 100%;
+      border-radius: 18px;
+      padding: 32px 28px;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+      border: 3px solid var(--yellow);
+    }
+    #modalBox p {
+      font-family: 'Patrick Hand', sans-serif;
+      font-size: 22px;
+      color: #4a2e63;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      margin: 0 0 20px;
+    }
+    #modalClose {
+      font-family: 'Quicksand', sans-serif;
+      font-weight: 600;
+      background: var(--purple);
+      color: white;
+      border: none;
+      padding: 10px 26px;
+      border-radius: 30px;
+      cursor: pointer;
+    }
+
+    /* ---------- mobile adjustments ---------- */
+    @media (max-width: 600px) {
+      #stage2 { padding: 30px 14px 60px; }
+      .letter-frame { max-width: 100%; padding: 0 12px; margin: 40px auto 34px; }
+      .letter { padding: 30px 22px; transform: rotate(-1.3deg); }
+      .letter-text {
+        font-size: 18px;
+        line-height: 30px;
+        background-image: repeating-linear-gradient(
+          to bottom,
+          transparent 0,
+          transparent 27px,
+          rgba(124,79,176,0.3) 28px,
+          transparent 29px,
+          transparent 30px
+        );
+        background-size: 100% 30px;
+      }
+      .letter::before { width: 70px; height: 26px; top: -11px; }
+      .corner-flower { width: 36px; height: 36px; }
+      .corner-flower.tl { top: -12px; left: -12px; }
+      .corner-flower.br { bottom: -12px; right: -12px; }
+      .marigold { width: 42px !important; height: 42px !important; }
+      .title-wrap h1 { font-size: 46px; }
+      .choice-btn { padding: 12px 30px; font-size: 19px; }
+      #modalBox { padding: 26px 20px; }
+      #modalBox p { font-size: 19px; }
+    }
+  </style>
+
+  <div class="title-wrap">
+    <h1>Keidy...</h1>
+    <p class="sub">a little something for you</p>
+  </div>
+
+  <div class="letter-frame">
+    <div class="letter">
+      <svg class="corner-flower tl" viewBox="0 0 100 100"><use href="#marigoldFlower"/></svg>
+      <svg class="corner-flower br" viewBox="0 0 100 100"><use href="#marigoldFlower"/></svg>
+      <p class="letter-text" id="letterText"></p>
+    </div>
+  </div>
+
+  <div class="choice-wrap">
+    <button class="choice-btn" id="yesBtn">Oui</button>
+    <button class="choice-btn" id="noBtn">Nein</button>
+  </div>
+
+  <!-- decorative marigolds floating around the page -->
+  <svg class="marigold" style="top:6%; left:8%;" viewBox="0 0 100 100"><use href="#marigoldFlowerYellow"/></svg>
+  <svg class="marigold" style="top:12%; right:10%; width:55px; height:55px;" viewBox="0 0 100 100"><use href="#marigoldFlowerYellow"/></svg>
+  <svg class="marigold" style="bottom:8%; left:6%; width:60px; height:60px;" viewBox="0 0 100 100"><use href="#marigoldFlowerYellow"/></svg>
+  <svg class="marigold" style="bottom:5%; right:8%;" viewBox="0 0 100 100"><use href="#marigoldFlowerYellow"/></svg>
+  <svg class="marigold" style="top:45%; left:2%; width:40px; height:40px; opacity:0.5;" viewBox="0 0 100 100"><use href="#marigoldFlowerYellow"/></svg>
+  <svg class="marigold" style="top:38%; right:3%; width:40px; height:40px; opacity:0.5;" viewBox="0 0 100 100"><use href="#marigoldFlowerYellow"/></svg>
+
+  <!-- reusable marigold flower shape -->
+  <svg width="0" height="0" style="position:absolute;">
+    <defs>
+      <g id="marigoldFlower">
+        <g fill="#f0972c" stroke="#c9781f" stroke-width="1.5">
+          <ellipse cx="50" cy="20" rx="12" ry="20"/>
+          <ellipse cx="50" cy="80" rx="12" ry="20"/>
+          <ellipse cx="20" cy="50" rx="20" ry="12"/>
+          <ellipse cx="80" cy="50" rx="20" ry="12"/>
+          <ellipse cx="29" cy="29" rx="12" ry="20" transform="rotate(-45 29 29)"/>
+          <ellipse cx="71" cy="71" rx="12" ry="20" transform="rotate(-45 71 71)"/>
+          <ellipse cx="29" cy="71" rx="12" ry="20" transform="rotate(45 29 71)"/>
+          <ellipse cx="71" cy="29" rx="12" ry="20" transform="rotate(45 71 29)"/>
+        </g>
+        <circle cx="50" cy="50" r="16" fill="#f4b400" stroke="#c9781f" stroke-width="1.5"/>
+      </g>
+      <g id="marigoldFlowerYellow">
+        <g fill="#f9d648" stroke="#d9a916" stroke-width="1.5">
+          <ellipse cx="50" cy="20" rx="12" ry="20"/>
+          <ellipse cx="50" cy="80" rx="12" ry="20"/>
+          <ellipse cx="20" cy="50" rx="20" ry="12"/>
+          <ellipse cx="80" cy="50" rx="20" ry="12"/>
+          <ellipse cx="29" cy="29" rx="12" ry="20" transform="rotate(-45 29 29)"/>
+          <ellipse cx="71" cy="71" rx="12" ry="20" transform="rotate(-45 71 71)"/>
+          <ellipse cx="29" cy="71" rx="12" ry="20" transform="rotate(45 29 71)"/>
+          <ellipse cx="71" cy="29" rx="12" ry="20" transform="rotate(45 71 29)"/>
+        </g>
+        <circle cx="50" cy="50" r="16" fill="#fff2b0" stroke="#d9a916" stroke-width="1.5"/>
+      </g>
+    </defs>
+  </svg>
+
+  <div id="modalOverlay">
+    <div id="modalBox">
+      <p id="modalMessage"></p>
+      <button id="modalClose">close</button>
+    </div>
+  </div>
+
+</div>
+
+
+<script>
+/* =========================================================
+   ~~~~~~~~~~~~~~~ EDIT YOUR MESSAGES HERE ~~~~~~~~~~~~~~~
+   These three are the only things you should need to change.
+   ========================================================= */
+
+// The letter she'll see. It stretches to fit however long this is.
+const loveLetterMessage =
+`These last two months we've been getting to know each other have been absolutely wonderful and amazing. 
+Youre genuinely so super awesome and I'm now berry sure of what I'm feeling. I am truly incredibly profoundly interested in you. Berry much a lot.
+And I really really really want to get to know you so much more. Infinitely more. 
+You're actually like so so much fun to talk to, and I know this will sound cliché but genuinely I haven't met such a sweet, cool, fun, and interesting person who I feel so comfortable with, until I met you of course.
+It's been so fun to talk about movie stuff, receive such crazy good references, talk about your life and my life, and of course turn out typos into a whole peak language nobody else will understand.
+You really are such a great and amazing person and I'm super impressed by all of what you are.
+
+Thank you for responding to me that first time and for being so open to talk to me since the start.
+I'm extremely lucky that I got to meet you and I'm so so grateful.
+I feel berry berry heard and seen with you. In the midst of all this stress and chaos, you've truly lit up my life, and I hope I maybe do the same for you.
+I hope you might feel a similar way overall. And so, I was wondering.. would you like to go out somewhere sometime with me?`;
+
+// Shown if she clicks "Yes"
+const yesMessage = `IM SO HAPPY TEXT ME TEXT ME BRING ME THE WONDERFUL NEWS🥹🥹`;
+
+// Shown if she clicks "No :("
+const noMessage = `Awh, that's alright. If you ever change your mind, I'll be here.`;
+
+/* ========================================================= */
+
+
+document.getElementById('letterText').textContent = loveLetterMessage;
+
+// ---------------------------------------------------------
+// Uhonish dictionary (English -> Uhonish). Several pairs are
+// already reciprocal (line/long, yo/to, font/don't) so we can
+// just invert this object to translate back.
+// ---------------------------------------------------------
+const dictForward = {
+  "line": "long",
+  "long": "line",
+  "inventor": "invetor",
+  "hell": "jell",
+  "spanish": "soanish",
+  "french": "franch",
+  "speak": "soeak",
+  "clearly": "cleary",
+  "like": "likr",
+  "ice": "oce",
+  "use": "uae",
+  "got": "gyatt",
+  "gotta": "gyatta",
+  "yo": "to",
+  "to": "yo",
+  "four": "for",
+  "that": "thag",
+  "refresh": "tefresh",
+  "compared": "conpared",
+  "right": "rightr",
+  "left": "leftr",
+  "very": "berry",
+  "anyways": "anywyz",
+  "don't": "font",
+  "font": "don't",
+  "always": "alwayz",
+  "ya": "yara yara",
+  "me": "mo"
+};
+
+const dictReverse = {};
+for (const key in dictForward) {
+  dictReverse[dictForward[key].toLowerCase()] = key;
+}
+dictReverse["gor"] = "got"; // legacy/alternate spelling, kept for reverse lookups only
+
+// words that keep their o's and i's exactly as-is (Uhonish words
+// themselves, plus a handful of slang terms that shouldn't get mangled)
+const exemptSet = new Set([
+  "get", "out", "to", "yo", "likr", "lowkey", "highkey", "goat", "goated",
+  "oop", "mi", "long", "line", "invetor", "jell", "soanish", "franch",
+  "soeak", "cleary", "oce", "uae", "gyatt", "gor", "gyatta", "for", "thag",
+  "tefresh", "conpared", "rightr", "leftr", "dat", "berry", "anywyz",
+  "font", "don't", "alwayz", "mo", "yara"
+]);
+
+function applyCase(original, replacement) {
+  if (original === original.toUpperCase() && original !== original.toLowerCase()) {
+    return replacement.toUpperCase();
+  }
+  if (original[0] === original[0].toUpperCase() && original[0] !== original[0].toLowerCase()) {
+    return replacement.charAt(0).toUpperCase() + replacement.slice(1);
+  }
+  return replacement;
+}
+
+function replaceWords(text, dict, daySubFrom, daySubTo) {
+  return text.replace(/[A-Za-z']+/g, function (word) {
+    const lower = word.toLowerCase();
+    if (Object.prototype.hasOwnProperty.call(dict, lower)) {
+      return applyCase(word, dict[lower]);
+    }
+    if (daySubFrom && lower.indexOf(daySubFrom) !== -1) {
+      const re = new RegExp(daySubFrom, 'gi');
+      return word.replace(re, function (m) { return applyCase(m, daySubTo); });
+    }
+    return word;
+  });
+}
+
+function swapOIChar(ch) {
+  if (ch === 'o') return 'i';
+  if (ch === 'O') return 'I';
+  if (ch === 'i') return 'o';
+  if (ch === 'I') return 'O';
+  return ch;
+}
+
+function swapLettersExceptExempt(text) {
+  return text.replace(/[A-Za-z']+/g, function (word) {
+    const key = word.toLowerCase();
+    if (exemptSet.has(key)) return word;
+    let out = '';
+    for (const ch of word) out += swapOIChar(ch);
+    return out;
+  });
+}
+
+function toUhonish(input) {
+  let text = replaceWords(input, dictForward, 'day', 'dat');
+  text = swapLettersExceptExempt(text);
+  return text;
+}
+
+function toEnglish(input) {
+  let text = input.replace(/\byara\s+yara\b/gi, m => applyCase(m, 'ya'));
+  text = swapLettersExceptExempt(text);
+  text = replaceWords(text, dictReverse, 'dat', 'day');
+  return text;
+}
+
+// ---------------------------------------------------------
+// Stage 1 -> Stage 2 transition
+// ---------------------------------------------------------
+let hasTranslatedOnce = false;
+
+document.getElementById('translateBtn').addEventListener('click', function () {
+  const input = document.getElementById('inputBox').value;
+  const direction = document.querySelector('input[name="direction"]:checked').value;
+  const result = direction === 'toUhonish' ? toUhonish(input) : toEnglish(input);
+  document.getElementById('outputBox').value = result;
+
+  if (!hasTranslatedOnce && input.trim().length > 0) {
+    hasTranslatedOnce = true;
+    setTimeout(revealSurprise, 700);
+  }
+});
+
+function revealSurprise() {
+  const s1 = document.getElementById('stage1');
+  const s2 = document.getElementById('stage2');
+  s1.style.transition = 'opacity 0.6s ease';
+  s1.style.opacity = '0';
+  setTimeout(function () {
+    s1.style.display = 'none';
+    s2.style.display = 'block';
+    s2.style.opacity = '0';
+    s2.style.transition = 'opacity 0.9s ease';
+    requestAnimationFrame(() => { s2.style.opacity = '1'; });
+  }, 600);
+}
+
+// ---------------------------------------------------------
+// Yes / No modal
+// ---------------------------------------------------------
+document.getElementById('yesBtn').addEventListener('click', () => openModal(yesMessage));
+document.getElementById('noBtn').addEventListener('click', () => openModal(noMessage));
+document.getElementById('modalClose').addEventListener('click', closeModal);
+document.getElementById('modalOverlay').addEventListener('click', function (e) {
+  if (e.target === this) closeModal();
+});
+
+function openModal(msg) {
+  document.getElementById('modalMessage').textContent = msg;
+  const overlay = document.getElementById('modalOverlay');
+  overlay.style.display = 'flex';
+}
+function closeModal() {
+  document.getElementById('modalOverlay').style.display = 'none';
+}
+</script>
+
+</body>
+</html>
