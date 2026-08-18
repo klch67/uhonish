@@ -56,7 +56,10 @@
       min-height: 100vh;
       box-sizing: border-box;
       padding: 40px 20px 70px;
-      background: radial-gradient(circle at 20% 10%, #9b6cc7 0%, var(--purple-deep) 55%, #3a1f5c 100%);
+      background:
+        radial-gradient(circle 460px at 24% 140px, #9b6cc7 0%, rgba(155,108,199,0) 100%),
+        linear-gradient(180deg, var(--purple-deep) 0%, #3a1f5c 100%);
+      background-repeat: no-repeat, no-repeat;
       color: #3a1f5c;
       position: relative;
       overflow-x: hidden;
@@ -82,7 +85,7 @@
     }
     .title-wrap h1 {
       font-family: 'Dancing Script', cursive;
-      font-size: clamp(48px, 9vw, 92px);
+      font-size: clamp(60px, 12vw, 120px);
       color: var(--yellow);
       text-shadow: 0 3px 12px rgba(0,0,0,0.35);
       margin: 0;
@@ -225,7 +228,13 @@
     }
 
     @media (max-width: 600px) {
-      #stage2 { padding: 30px 14px 60px; }
+      #stage2 {
+        padding: 30px 14px 60px;
+        background:
+          radial-gradient(circle 260px at 28% 90px, #9b6cc7 0%, rgba(155,108,199,0) 100%),
+          linear-gradient(180deg, var(--purple-deep) 0%, #3a1f5c 100%);
+        background-repeat: no-repeat, no-repeat;
+      }
       .letter-frame { max-width: 100%; padding: 0 12px; margin: 40px auto 34px; }
       .letter { padding: 30px 22px; transform: rotate(-1.3deg); }
       .letter-text {
@@ -246,7 +255,7 @@
       .corner-flower.tl { top: -12px; left: -12px; }
       .corner-flower.br { bottom: -12px; right: -12px; }
       .marigold { width: 42px !important; height: 42px !important; }
-      .title-wrap h1 { font-size: 46px; }
+      .title-wrap h1 { font-size: 60px; }
       .choice-btn { padding: 12px 30px; font-size: 19px; }
       #modalBox { padding: 26px 20px; }
       #modalBox p { font-size: 19px; }
